@@ -19,12 +19,19 @@ std::vector<std::string> split(const std::string& str, const char sep) {
 std::vector<std::vector<double>> parsing(const std::string& file_name, const char sep) {
     std::ifstream file(file_name);
     if (!file.is_open()) {
-        throw std::ios_base::failure("Unable to open file."); 
+        throw std::ios_base::failure("Unable to open file.");
     }
 
     std::string line;
     if (!std::getline(file, line)) {
         throw std::runtime_error("Header line is missing.");
+    }
+
+    char file_sep = line.find(',') != std::string::npos ? ',' : '\t'; 
+
+    if (file_sep != sep) { 
+        file.close();
+        throw std::runtime_error("Chosen separator does not match the separator in the file.");
     }
 
     std::vector<std::string> col_names = split(line, sep);
@@ -38,6 +45,7 @@ std::vector<std::vector<double>> parsing(const std::string& file_name, const cha
     std::cout << std::endl;
 
     std::vector<std::vector<double>> data;
+    int line_number = 1; 
     while (std::getline(file, line)) {
         std::vector<std::string> values = split(line, sep);
         std::vector<double> row;
@@ -47,13 +55,14 @@ std::vector<std::vector<double>> parsing(const std::string& file_name, const cha
                 row.push_back(number);
             }
             catch (const std::invalid_argument& e) {
-                throw std::runtime_error("Invalid data format: " + value); 
+                throw std::runtime_error("Invalid data format on line " + std::to_string(line_number) + ": " + value);
             }
         }
         if (row.size() != col_names.size()) {
-            throw std::runtime_error("Mismatch between column count and data values."); 
+            throw std::runtime_error("Mismatch between column count and data values on line " + std::to_string(line_number));
         }
         data.push_back(row);
+        line_number++; 
     }
 
     file.close();
@@ -77,10 +86,10 @@ void read_file(const std::string& file_name, const char sep) {
 
     }
     catch (const std::ios_base::failure& e) {
-        std::cout << "Error opening or reading the file: " << e.what() << std::endl; 
+        std::cout << "Error opening or reading the file: " << e.what() << std::endl;
     }
     catch (const std::runtime_error& e) {
-        std::cout << "Error parsing the file: " << e.what() << std::endl; 
+        std::cout << "Error parsing the file: " << e.what() << std::endl;
     }
 }
 
@@ -96,7 +105,7 @@ char sep_choice() {
 int main() {
     std::string file_name;
     std::cout << "Input file name:" << std::endl;
-    std::getline(std::cin, file_name);
+    std::cin >> file_name;
 
     char separator;
     bool right_choice = false;
@@ -119,4 +128,3 @@ int main() {
 
     return 0;
 }
-
